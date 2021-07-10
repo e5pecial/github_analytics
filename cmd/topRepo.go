@@ -24,7 +24,7 @@ var topRepoCmd = &cobra.Command{
 		case "commits":
 			internal.GetRepositoriesByCommits(topN)
 		default:
-			fmt.Println("Undefined type key: Use `watch` or `commits`")
+			fmt.Println("Undefined type key: Use key -t and params `watch` or `commits`")
 		}
 	},
 }

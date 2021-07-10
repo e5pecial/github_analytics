@@ -15,12 +15,8 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "github_analytics",
 	Short: "Github repository analytics",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long: `You can get some inforamtion about top github repos and authors 
+	using special commands. Learn more in available command section.`,
 }
 
 func Execute() {

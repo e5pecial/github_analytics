@@ -29,6 +29,11 @@ type Repository struct {
 	Name string
 }
 
+type Counter struct {
+	ID    int64
+	Count int
+}
+
 func (a *Actor) Unmarshal(row []string) error {
 	if len(row) != reflect.TypeOf(*a).NumField() {
 		return errors.New("Incorrect elements count")

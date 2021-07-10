@@ -11,7 +11,7 @@ func GetRepositoriesByWatchEvents(n int) {
 
 	eventsCh := make(chan []string)
 	repos := make(map[int64]*Repository)
-	reader := NewReader("events.csv", eventsCh)
+	reader := NewReader("/assets/events.csv", eventsCh)
 	wg.Add(1)
 	go getRepos(repos, &wg)
 	go reader.ReadCsvToChannel()
@@ -28,7 +28,7 @@ func GetAutorsByCommits(n int) {
 	eventsCh := make(chan []string)
 	authors := make(map[int64]*Actor)
 	commitsByEvent := make(map[int64]int)
-	reader := NewReader("events.csv", eventsCh)
+	reader := NewReader("/assets/events.csv", eventsCh)
 
 	wg.Add(2)
 	go getAuthors(authors, &wg)
@@ -50,7 +50,7 @@ func GetRepositoriesByCommits(n int) {
 	eventsCh := make(chan []string)
 	commitsByEvent := make(map[int64]int)
 	repos := make(map[int64]*Repository)
-	reader := NewReader("events.csv", eventsCh)
+	reader := NewReader("/assets/events.csv", eventsCh)
 	wg.Add(2)
 	go getRepos(repos, &wg)
 	go getCommits(commitsByEvent, &wg)
@@ -69,7 +69,7 @@ func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) {
 	records := make(chan []string)
 	defer wg.Done()
 
-	reader := NewReader("actors.csv", records)
+	reader := NewReader("/assets/actors.csv", records)
 
 	go reader.ReadCsvToChannel()
 	for record := range records {
@@ -86,7 +86,7 @@ func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) {
 func getRepos(repos map[int64]*Repository, wg *sync.WaitGroup) {
 	records := make(chan []string)
 	defer wg.Done()
-	reader := NewReader("repos.csv", records)
+	reader := NewReader("/assets/repos.csv", records)
 	go reader.ReadCsvToChannel()
 	for record := range records {
 		repo := Repository{}
@@ -101,7 +101,7 @@ func getRepos(repos map[int64]*Repository, wg *sync.WaitGroup) {
 
 func getCommits(commits map[int64]int, wg *sync.WaitGroup) {
 	commitsCh := make(chan []string)
-	reader := NewReader("commits.csv", commitsCh)
+	reader := NewReader("/assets/commits.csv", commitsCh)
 	defer wg.Done()
 	go reader.ReadCsvToChannel()
 

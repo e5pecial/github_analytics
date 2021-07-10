@@ -36,4 +36,5 @@ var topRepoCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(topRepoCmd)
 	topRepoCmd.Flags().StringP("type", "t", "", "Get top repos by commits pushed or watch event")
+	topRepoCmd.Flags().IntP("topN", "n", 10, "Get top-N rows")
 }

@@ -24,4 +24,6 @@ var topActorsCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(topActorsCmd)
+	topActorsCmd.Flags().IntP("topN", "n", 10, "Get top-N rows")
+
 }

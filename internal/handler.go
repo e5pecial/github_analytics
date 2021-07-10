@@ -62,6 +62,7 @@ func GetRepositoriesByCommits(n int) {
 	sortedArray = sortedArray[:n]
 
 	prettifyRepo(sortedArray, repos)
+
 }
 
 func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) {

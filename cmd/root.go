@@ -25,7 +25,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	topRepoCmd.Flags().IntP("topN", "n", 10, "Get top-N rows")
+	rootCmd.Flags().IntP("topN", "n", 10, "Get top-N rows")
 
 }
 

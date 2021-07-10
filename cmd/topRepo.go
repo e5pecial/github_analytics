@@ -18,6 +18,10 @@ var topRepoCmd = &cobra.Command{
 		flag, _ := cmd.Flags().GetString("type")
 		topN, _ := cmd.Flags().GetInt("topN")
 
+		if topN < 0 {
+			fmt.Println("Negative numbers unsupported. Set n=10")
+			topN = 10
+		}
 		switch flag {
 		case "watch":
 			internal.GetRepositoriesByWatchEvents(topN)

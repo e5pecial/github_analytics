@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -16,7 +17,11 @@ func GetRepositoriesByWatchEvents(n int) {
 	go getRepos(repos, &wg)
 	go reader.ReadCsvToChannel()
 	wg.Wait()
-	watchEvents := getWatchEventsByRepoId(eventsCh)
+	watchEvents, err := getWatchEventsByRepoId(eventsCh)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	sortedArray := sortByValue(watchEvents)
 	sortedArray = sortedArray[:n]
 	prettifyRepo(sortedArray, repos)
@@ -36,7 +41,11 @@ func GetAutorsByCommits(n int) {
 	go reader.ReadCsvToChannel()
 	wg.Wait()
 
-	events := getEventsCountByActorID(eventsCh, commitsByEvent)
+	events, err := getEventsCountByActorID(eventsCh, commitsByEvent)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	sortedArray := sortByValue(events)
 	sortedArray = sortedArray[:n]
@@ -56,7 +65,11 @@ func GetRepositoriesByCommits(n int) {
 	go getCommits(commitsByEvent, &wg)
 	go reader.ReadCsvToChannel()
 	wg.Wait()
-	events := getEventsCountByRepoID(eventsCh, commitsByEvent)
+	events, err := getEventsCountByRepoID(eventsCh, commitsByEvent)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	sortedArray := sortByValue(events)
 	sortedArray = sortedArray[:n]
@@ -65,7 +78,7 @@ func GetRepositoriesByCommits(n int) {
 
 }
 
-func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) {
+func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) error {
 	records := make(chan []string)
 	defer wg.Done()
 
@@ -76,14 +89,15 @@ func getAuthors(actors map[int64]*Actor, wg *sync.WaitGroup) {
 		actor := Actor{}
 		err := actor.Unmarshal(record)
 		if err != nil {
-			fmt.Println(err)
-			break
+			return errors.New("Unmarshalling problem: " + err.Error())
 		}
 		actors[actor.ID] = &actor
 	}
+
+	return nil
 }
 
-func getRepos(repos map[int64]*Repository, wg *sync.WaitGroup) {
+func getRepos(repos map[int64]*Repository, wg *sync.WaitGroup) error {
 	records := make(chan []string)
 	defer wg.Done()
 	reader := NewReader("/assets/repos.csv", records)
@@ -92,14 +106,14 @@ func getRepos(repos map[int64]*Repository, wg *sync.WaitGroup) {
 		repo := Repository{}
 		err := repo.Unmarshal(record)
 		if err != nil {
-			fmt.Println(err)
-			break
+			return errors.New("Unmarshalling problem: " + err.Error())
 		}
 		repos[repo.ID] = &repo
 	}
+	return nil
 }
 
-func getCommits(commits map[int64]int, wg *sync.WaitGroup) {
+func getCommits(commits map[int64]int, wg *sync.WaitGroup) error {
 	commitsCh := make(chan []string)
 	reader := NewReader("/assets/commits.csv", commitsCh)
 	defer wg.Done()
@@ -109,32 +123,41 @@ func getCommits(commits map[int64]int, wg *sync.WaitGroup) {
 		commit := Commit{}
 		err := commit.Unmarshal(record)
 		if err != nil {
-			fmt.Println(err)
-			break
+			return errors.New("Unmarshalling problem: " + err.Error())
+		}
+		if err != nil {
+			return err
 		}
 		commits[commit.EventId] += 1
 	}
+	return nil
 }
 
-func getEventsCountByRepoID(records <-chan []string, commitsMapping map[int64]int) map[int64]int {
+func getEventsCountByRepoID(records <-chan []string, commitsMapping map[int64]int) (map[int64]int, error) {
 	events := make(map[int64]int)
 
 	for record := range records {
 		event := Event{}
-		event.Unmarshal(record)
+		err := event.Unmarshal(record)
+		if err != nil {
+			return nil, errors.New("Unmarshalling problem: " + err.Error())
+		}
 		if event.Type == "PushEvent" {
 			events[event.RepoId] += commitsMapping[event.ID]
 		}
 	}
-	return events
+	return events, nil
 }
 
-func getEventsCountByActorID(records <-chan []string, commitsMapping map[int64]int) map[int64]int {
+func getEventsCountByActorID(records <-chan []string, commitsMapping map[int64]int) (map[int64]int, error) {
 	events := make(map[int64]int)
 
 	for record := range records {
 		event := Event{}
-		event.Unmarshal(record)
+		err := event.Unmarshal(record)
+		if err != nil {
+			return nil, errors.New("Unmarshalling problem: " + err.Error())
+		}
 		switch event.Type {
 		case "PushEvent":
 			events[event.ActorId] += commitsMapping[event.ID]
@@ -142,20 +165,23 @@ func getEventsCountByActorID(records <-chan []string, commitsMapping map[int64]i
 			events[event.ActorId] += 1
 		}
 	}
-	return events
+	return events, nil
 }
 
-func getWatchEventsByRepoId(records <-chan []string) map[int64]int {
+func getWatchEventsByRepoId(records <-chan []string) (map[int64]int, error) {
 	events := make(map[int64]int)
 
 	for record := range records {
 		event := Event{}
-		event.Unmarshal(record)
+		err := event.Unmarshal(record)
+		if err != nil {
+			return nil, errors.New("Unmarshalling problem: " + err.Error())
+		}
 		if event.Type == "WatchEvent" {
 			events[event.RepoId] += 1
 		}
 	}
-	return events
+	return events, nil
 }
 
 func sortByValue(mapping map[int64]int) []Counter {
